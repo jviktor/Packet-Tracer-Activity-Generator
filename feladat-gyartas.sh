@@ -1,4 +1,5 @@
 #!/bin/bash
+IFS=$(echo -en "\n\b")
 
 #Smart sleep function with countdown in terminal, use integer parameters only!!!
 function sleep {
@@ -23,7 +24,7 @@ function type {
 #Packet Tracer starter with opening source file
 function start {
 	log "Starting Packet Tracer opening $1"
-	packettracer $1&
+	packettracer $1 &>/dev/null &
 	sleep 10 #should be enough
 	enter
 }
@@ -109,7 +110,7 @@ function fix_answer {
 	tab 1
 	xdotool key "ctrl+a"
 	sleep 1
-	type "Flag{$answer}"
+	type "<div style=\'font-family: \"Courier New\", Courier, monospace;'><center>Gratulálok, sikeresen teljesítetted a feladatot, íme a bekülendő kód:<br/><br/><h1>Flag{$answer}</h1><br/></br/>A kódot az alábbi weboldalon tudod beküldeni:<br/><a href="http://clab.inf.u-szeged.hu/kurzusok/cisco/beadando-feladat/">http://clab.inf.u-szeged.hu/kurzusok/cisco/beadando-feladat/</a></div>"
 	sleep 1
 }
 
@@ -208,12 +209,12 @@ echo "outputfilename,flag,password" > $dbfile
 log "Cleaning output files"
 rm -rf $workdir/out_*
 
-pkas=`ls $workdir | grep pka | grep -v out_`
-pkanumber=`ls $workdir | grep pka | grep -v out_|wc -l`
+pkas=`ls $workdir -1 -v | grep pka | grep -v out_`
+pkanumber=`ls $workdir -1 -v | grep pka | grep -v out_|wc -l`
 pkacounter=0
 log $pkas
 for pka in $pkas
 do
 	pkacounter=$(($pkacounter+1))
-	time generate "$workdir" "$pka" 12
+	time generate "$workdir" "$pka" 1
 done
