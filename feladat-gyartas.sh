@@ -17,7 +17,7 @@ function type {
 	for char in `echo "$1" | grep -o .`
 	do
 		xdotool type "$char"
-		/bin/sleep 0.1
+		/bin/sleep 0.01
 	done
 }
 
@@ -34,13 +34,13 @@ function focus {
 	log "searching for $1"	
 	title=$1
 	pt_window=`xdotool search --name "$1"`
-	sleep 5
-	log "activating window $1"
-	xdotool windowactivate $pt_window
-	sleep 5
+	sleep 1
+#	log "activating window $1"
+#	xdotool windowactivate $pt_window
+#	sleep 5
 	log "setting focus to $1"
 	xdotool windowfocus $pt_window
-	sleep 5
+	sleep 3
 }
 
 #Custom function for pressing enter
@@ -68,13 +68,6 @@ function cleanup {
 	sleep 3
 }
 
-#Switch to Answer Network page in Activity Wizard
-function switch_to_answer_network {
-	log "switch_to_answer_network"
-	xdotool key "alt+a"
-	sleep 1
-}
-
 #Custom tab function, repeat count as parameter
 function tab {
 	log "pressing $1 tabs"
@@ -82,7 +75,7 @@ function tab {
 	do
 		echo -ne "$i "
 		xdotool key Tab
-		/bin/sleep 1
+		/bin/sleep 0.1
 	done
 	echo ""
 
@@ -95,7 +88,20 @@ function right {
 	do
 		echo -ne "$i "
 		xdotool key Right
-		/bin/sleep 1
+		/bin/sleep 0.1
+	done
+	echo ""
+
+}
+
+#Custom left key function, repeat count as parameter
+function left {
+	log "pressing $1 lefts"
+	for i in `seq $1 -1 1`
+	do
+		echo -ne "$i "
+		xdotool key Left
+		/bin/sleep 0.1
 	done
 	echo ""
 
@@ -103,26 +109,27 @@ function right {
 
 #Congratulation message modifier
 function fix_answer {
+	log "switch_to_answer_network"
+	xdotool key "alt+a"
+	sleep 1
+	focus "Activity Wizard"
 	answer=$1
 	log "fix_answer to $answer"
 	tab 4
-	right 3
+	right 4
+	left 1
 	tab 1
 	xdotool key "ctrl+a"
 	sleep 1
-	type "<div style=\'font-family: \"Courier New\", Courier, monospace;'><center>Gratulálok, sikeresen teljesítetted a feladatot, íme a bekülendő kód:<br/><br/><h1>Flag{$answer}</h1><br/></br/>A kódot az alábbi weboldalon tudod beküldeni:<br/><a href="http://clab.inf.u-szeged.hu/kurzusok/cisco/beadando-feladat/">http://clab.inf.u-szeged.hu/kurzusok/cisco/beadando-feladat/</a></div>"
-	sleep 1
-}
-
-#Switch to password page
-function switch_to_password {
-	log "switch_to_password"
-	xdotool key "alt+p"
+	type "<font face="courier" size="3"><center>Gratulálok, sikeresen teljesítetted a feladatot, íme a bekülendő kód:<br/><br/><h1>Flag{$answer}</h1><br/></br/>A kódot az alábbi weboldalon tudod beküldeni:<br/><a href="http://clab.inf.u-szeged.hu/kurzusok/cisco/beadando-feladat/">http://clab.inf.u-szeged.hu/kurzusok/cisco/beadando-feladat/</a></font>"
 	sleep 1
 }
 
 #Change password of the .pka file
 function fix_password {
+	log "switch_to_password"
+	xdotool key "alt+p"
+	sleep 1
 	password=$1
 	log "changing password to $password"
 	tab 9
@@ -135,45 +142,33 @@ function fix_password {
 	sleep 1
 }
 
-#Switch to save as page
-function switch_to_save_as {
+#Save file as a custom name
+function save_as {
 	log "switch_to_save_as"
 	xdotool key "alt+w"
 	sleep 1
 	tab 6
 	xdotool type " "
 	sleep 1
-}
-
-#Save file as a custom name
-function save_as {
 	filename=$1
 	log "save_as $1"
 	type "$1"
 	sleep 1
 	enter
 	log "waiting file to be saved"
-	sleep 10
+	sleep 5
 	log "sync"
 	sync
-	sleep 5
+	sleep 1
 }
 
 #Create an output file from parameters
 function create {
 	log "create $1/$2 $3 $4 $5"
-	cleanup
-	start "$1/$2"
-	focus "Cisco Packet Tracer Instructor"
-	activate_activity_wizard
-	switch_to_answer_network
 	focus "Activity Wizard"
 	fix_answer "$3"
-	switch_to_password
 	fix_password "$4"
-	switch_to_save_as
 	save_as "$5"
-	cleanup
 }
 
 #Log messages to console as well as the log file
@@ -185,6 +180,10 @@ function log {
 #Generate lot of out files from an input and a repeat count
 function generate {
 	log "generate $1/$2 $3"
+	cleanup
+	start "$1/$2"
+	focus "Cisco Packet Tracer Instructor"
+	activate_activity_wizard
 	for gen in `seq -w 1 $3`
 	do
 		flaggg=`pwgen -A -B -0 16 -1`
@@ -196,10 +195,11 @@ function generate {
 		percent=$((100*$currentnumber/$allnumber))
 		log "STATUS: [$percent%] [Version: $gen/$3] [PKA: $pkacounter/$pkanumber] [All: $currentnumber/$allnumber]"
 	done
+	cleanup
 }
 
 #init
-workdir="/home/jv/Desktop/cisco"
+workdir="/home/mint/Desktop/cisco"
 logfile=`date +"%Y-%m-%d_%H:%M:%S.log"`
 dbfile=`date +"%Y-%m-%d_%H:%M:%S.csv"`
 touch $logfile
@@ -216,5 +216,7 @@ log $pkas
 for pka in $pkas
 do
 	pkacounter=$(($pkacounter+1))
-	time generate "$workdir" "$pka" 1
+	time generate "$workdir" "$pka" 40
 done
+
+
