@@ -121,7 +121,7 @@ function fix_answer {
 	tab 1
 	xdotool key "ctrl+a"
 	sleep 1
-	type "<font face="courier" size="3"><center>Gratulálok, sikeresen teljesítetted a feladatot, íme a bekülendő kód:<br/><br/><h1>Flag{$answer}</h1><br/></br/>A kódot az alábbi weboldalon tudod beküldeni:<br/><a href="http://clab.inf.u-szeged.hu/kurzusok/cisco/beadando-feladat/">http://clab.inf.u-szeged.hu/kurzusok/cisco/beadando-feladat/</a></font>"
+	type "<font face="courier" size="3"><center>Gratulalok, sikeresen teljesitetted a feladatot, ime a bekulendo kod:<br/><br/><h1>Flag{$answer}</h1><br/></br/>A kodot az alabbi weboldalon tudod bekuldeni:<br/><a href="http://clab.inf.u-szeged.hu/kurzusok/cisco/beadando-feladat/" target="_blank">http://clab.inf.u-szeged.hu/kurzusok/cisco/beadando-feladat/</a></font>"
 	sleep 1
 }
 
@@ -216,7 +216,7 @@ log $pkas
 for pka in $pkas
 do
 	pkacounter=$(($pkacounter+1))
-	time generate "$workdir" "$pka" 40
+	time generate "$workdir" "$pka" 1
 done
 
 
