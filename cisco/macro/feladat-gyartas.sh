@@ -1,6 +1,8 @@
 #!/bin/bash
 IFS=$(echo -en "\n\b")
 
+neptunkod=()
+
 #Smart sleep function with countdown in terminal, use integer parameters only!!!
 function sleep {
 	for i in `seq $1 -1 1`
@@ -25,14 +27,16 @@ function type {
 function start {
 	log "Starting Packet Tracer opening $1"
 	packettracer $1 &>/dev/null &
-	sleep 10 #should be enough
+	sleep 20 #should be enough
 	enter
 }
 
 #Set focus to the desired window
 function focus {
-	log "searching for $1"	
-	title=$1
+	user=(whoami)
+	log "searching for $1"
+#	workdir="/home/${user}/Desktop/cisco"
+#	pkas=`ls $workdir -1 -v | grep pka | grep -v out_`
 	pt_window=`xdotool search --name "$1"`
 	sleep 1
 #	log "activating window $1"
@@ -64,7 +68,7 @@ function activate_activity_wizard {
 #Agressively shut down PT
 function cleanup {
 	log "killing Packet Tracer"
-	killall -9 PacketTracer6
+	killall -9 PacketTracer7
 	sleep 3
 }
 
@@ -94,6 +98,7 @@ function right {
 
 }
 
+
 #Custom left key function, repeat count as parameter
 function left {
 	log "pressing $1 lefts"
@@ -115,13 +120,12 @@ function fix_answer {
 	focus "Activity Wizard"
 	answer=$1
 	log "fix_answer to $answer"
-	tab 4
+	tab 19
 	right 4
-	left 1
 	tab 1
 	xdotool key "ctrl+a"
-	sleep 1
-	type "<font face="courier" size="3"><center>Gratulalok, sikeresen teljesitetted a feladatot, ime a bekulendo kod:<br/><br/><h1>Flag{$answer}</h1><br/></br/>A kodot az alabbi weboldalon tudod bekuldeni:<br/><a href="http://clab.inf.u-szeged.hu/kurzusok/cisco/beadando-feladat/" target="_blank">http://clab.inf.u-szeged.hu/kurzusok/cisco/beadando-feladat/</a></font>"
+	sleep 3
+	type "<font face="courier" size="3"><center>Gratulalok, sikeresen teljesitetted a feladatot, ime a bekuldendo kod:<br/><br/><h1>Flag{$answer}</h1><br/></br/>A kodot az alabbi weboldalon tudod bekuldeni:<br/><a href="http://clab.inf.u-szeged.hu/kurzusok/cisco/beadando-feladat/" target="_blank">http://clab.inf.u-szeged.hu/kurzusok/cisco/beadando-feladat/</a></font>"
 	sleep 1
 }
 
@@ -132,7 +136,7 @@ function fix_password {
 	sleep 1
 	password=$1
 	log "changing password to $password"
-	tab 9
+	tab 8
 	type "$password"
 	tab 1
 	type "$password"
@@ -147,19 +151,20 @@ function save_as {
 	log "switch_to_save_as"
 	xdotool key "alt+w"
 	sleep 1
-	tab 6
+	tab 9
 	xdotool type " "
-	sleep 1
+	sleep 10
 	filename=$1
-	log "save_as $1"
-	type "$1"
-	sleep 1
-	enter
+	log "save_as $filename"
+#	type "$filename"
+#	sleep 1
+#	tab 2
+#	enter
 	log "waiting file to be saved"
-	sleep 5
-	log "sync"
-	sync
-	sleep 1
+	sleep 10
+	usrname=$(id -u -n)
+	ls 
+	mv /home/$usrname/Desktop/cisco/$filename /home/$usrname/Desktop/cisco/final
 }
 
 #Create an output file from parameters
@@ -179,44 +184,87 @@ function log {
 
 #Generate lot of out files from an input and a repeat count
 function generate {
-	log "generate $1/$2 $3"
-	cleanup
-	start "$1/$2"
-	focus "Cisco Packet Tracer Instructor"
-	activate_activity_wizard
-	for gen in `seq -w 1 $3`
-	do
+	datum=`date | cut -d' ' -f2,3`
+#	for gen in `seq -w 0 $3`
+#	do
+		log "generate $1/$2 $3"
+        	cleanup
+        	start "$1/$2"
+        	focus "netacad.com Login"
+        	tab 1
+        	enter
+        	sleep 16
+        	killall -9 firefox
+        	focus "netacad.com Login"
+        	enter
+        	focus "User Profile"
+		sleep 10
+        	tab 1
+        	enter
+        	tab 1
+        	enter
+        	focus "Cisco Packet Tracer - $1/$2"
+        	activate_activity_wizard
+
 		flaggg=`pwgen -A -B -0 16 -1`
 		passss=`pwgen -A -B -0 16 -1`
-		echo "out_${gen}_$2,$flaggg,$passss" | tee -ai $dbfile
-		time create "$1" "$2" "$flaggg" "$passss" "out_${gen}_$2"
-		allnumber=$(($3*$pkanumber))
-		currentnumber=$(($pkacounter*$3-$3+10#$gen))
-		percent=$((100*$currentnumber/$allnumber))
-		log "STATUS: [$percent%] [Version: $gen/$3] [PKA: $pkacounter/$pkanumber] [All: $currentnumber/$allnumber]"
-	done
-	cleanup
+		number=$(echo "$2" | cut -d" " -f1 | cut -d"_" -f3)
+
+		echo "INSERT INTO \`pka\` VALUES ($3,'${neptunkod[$4]}','$number','$2','$flaggg','$passss','0')" >> cra_dump_${datum}.sql
+		echo "$4,$2,$flaggg,$passss" | tee -ai $dbfile
+		time create "$1" "$2" "$flaggg" "$passss" "$2"
+		#allnumber=$(($3*$pkanumber))
+		#currentnumber=$(($pkacounter*$3-$3+10#$gen))
+		#percent=$((100*$currentnumber/$allnumber))
+		#log "STATUS: [$percent%] [Version: $4/$3] [PKA: $pkacounter/$pkanumber] [All: $currentnumber/$allnumber]"
+		sleep 20
+		cleanup
+#	done
+#	enter
 }
 
 #init
-workdir="/home/mint/Desktop/cisco"
+usrname=$(id -u -n)
+workdir="/home/$usrname/Desktop/cisco/origin"
 logfile=`date +"%Y-%m-%d_%H:%M:%S.log"`
 dbfile=`date +"%Y-%m-%d_%H:%M:%S.csv"`
 touch $logfile
 touch $dbfile
-echo "outputfilename,flag,password" > $dbfile
+echo "neptun,outputfilename,flag,password" > $dbfile
 
 log "Cleaning output files"
-rm -rf $workdir/out_*
-
-pkas=`ls $workdir -1 -v | grep pka | grep -v out_`
-pkanumber=`ls $workdir -1 -v | grep pka | grep -v out_|wc -l`
+rm -rf $workdir/../final/out_*
+pkas=`ls $workdir -1 -v | grep pka`
 pkacounter=0
+realarraysize=$(expr ${#neptunkod[@]} - 1)
 log $pkas
-for pka in $pkas
+#touch ls.txt
+#for pka in $pkas
+#do
+#	for gen in `seq -w 0 $realarraysize`
+#        do
+#                cp -r $workdir/$pka $workdir/../out_${gen}_$pka
+#		echo "out_${gen}_$pka" >> ls.txt
+#        done
+#done
+
+out_pkas=`ls $workdir/.. -1 -v | grep out_`
+#out_pkas=$(cat ls.txt)
+
+#ls $workdir/.. | grep out_
+
+#exit 0
+
+#pkanumber=`ls $workdir -1 -v | grep pka |wc -l`
+setnumber=0
+for pka in $out_pkas
 do
 	pkacounter=$(($pkacounter+1))
-	time generate "$workdir" "$pka" 1
+	time generate "$workdir/.." "$pka" $pkacounter $setnumber
+	if [ $setnumber -eq $realarraysize ]; then
+		setnumber=0;
+	elif [ $setnumber -lt $realarraysize ]; then
+		setnumber=$(expr $setnumber + 1);
+	fi
 done
-
-
+#rm ls.txt
