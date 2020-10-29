@@ -1,7 +1,9 @@
 #!/bin/bash
 IFS=$(echo -en "\n\b")
 
-neptunkod=()
+neptunkod=(WT1ZOO D9HGIY W06RGM H454B0 K9Q9ST AWV5IJ GBF23S QE6OVN FYZF57 VYKH0A CYXBEC O6Z17B P3GO56 ADC0QO U986FW TS7427 ADH4QV RSW1AX ACRPDG EJ4V7E D9AX3A IFCTYZ JKYQJH Z4HK0Y PRR0LH B2ROYX CZOKVK FJT51J D5DFU3 WU6CTG TNEK19 EW545R NM1ILA TY1PE4 JK8IQD SV04W9 ATKZE7 B5E3EC PAJR3J WWJCMA R8ZAAJ BW2J3F BA7ZWW KDH0AZ)
+
+#neptunkod=(WT1ZOO D9HGIY)
 
 #Smart sleep function with countdown in terminal, use integer parameters only!!!
 function sleep {
@@ -27,7 +29,7 @@ function type {
 function start {
 	log "Starting Packet Tracer opening $1"
 	packettracer $1 &>/dev/null &
-	sleep 20 #should be enough
+	sleep 30 #should be enough
 	enter
 }
 
@@ -58,7 +60,7 @@ function enter {
 function activate_activity_wizard {
 	log "activate_activity_wizard"
 	xdotool key "ctrl+w"
-	sleep 1
+	sleep 3
 	log "typing password"	
 	type "PT_ccna5"
 	sleep 1
@@ -112,20 +114,24 @@ function left {
 
 }
 
+
 #Congratulation message modifier
 function fix_answer {
 	log "switch_to_answer_network"
+	sleep 2
+	focus "Activity Wizard"
 	xdotool key "alt+a"
 	sleep 1
 	focus "Activity Wizard"
 	answer=$1
 	log "fix_answer to $answer"
+	focus "Activity Wizard"
 	tab 19
 	right 4
-	tab 1
+	tab 2
 	xdotool key "ctrl+a"
 	sleep 3
-	type "<font face="courier" size="3"><center>Gratulalok, sikeresen teljesitetted a feladatot, ime a bekuldendo kod:<br/><br/><h1>Flag{$answer}</h1><br/></br/>A kodot az alabbi weboldalon tudod bekuldeni:<br/><a href="http://clab.inf.u-szeged.hu/kurzusok/cisco/beadando-feladat/" target="_blank">http://clab.inf.u-szeged.hu/kurzusok/cisco/beadando-feladat/</a></font>"
+	type "<font face="courier" size="3"><center>Gratulalok, sikeresen teljesitetted a feladatot, ime a bekuldendo kod:<br/><br/><h1>Flag{$answer}</h1><br/></br/>A kodot az alabbi weboldalon tudod bekuldeni:<br/><a href="http://clab.inf.u-szeged.hu/feladat/" target="_blank">http://clab.inf.u-szeged.hu/feladat/</a></font>"
 	sleep 1
 }
 
@@ -152,19 +158,28 @@ function save_as {
 	xdotool key "alt+w"
 	sleep 1
 	tab 9
+	#tab 10
 	xdotool type " "
-	sleep 10
-	filename=$1
-	log "save_as $filename"
-#	type "$filename"
-#	sleep 1
-#	tab 2
-#	enter
+	#sleep 10
+	#filename=$1
+	#num=$2
+	#tab 5
+	#xdotool type " "
+	#sleep 1
+	#tab 5
+	#enter
+	#sleep 2
+	#tab 1
+	#sleep 4
+	log "save_as out_${num}_$filename"
+	#type "out_${num}_$filename"
+	#sleep 1
+	#tab 2
+	#enter
 	log "waiting file to be saved"
 	sleep 10
 	usrname=$(id -u -n)
 	ls 
-	mv /home/$usrname/Desktop/cisco/$filename /home/$usrname/Desktop/cisco/final
 }
 
 #Create an output file from parameters
@@ -173,7 +188,7 @@ function create {
 	focus "Activity Wizard"
 	fix_answer "$3"
 	fix_password "$4"
-	save_as "$5"
+	save_as "$5" "$6"
 }
 
 #Log messages to console as well as the log file
@@ -184,43 +199,29 @@ function log {
 
 #Generate lot of out files from an input and a repeat count
 function generate {
-	datum=`date | cut -d' ' -f2,3`
-#	for gen in `seq -w 0 $3`
-#	do
+	datum=`date | cut -d'.' -f1-3`
 		log "generate $1/$2 $3"
         	cleanup
         	start "$1/$2"
-        	focus "netacad.com Login"
-        	tab 1
-        	enter
-        	sleep 16
-        	killall -9 firefox
-        	focus "netacad.com Login"
-        	enter
-        	focus "User Profile"
+		#focus "User Profile"
+		sleep 5
+		enter
+		sleep 1
+		enter
 		sleep 10
-        	tab 1
-        	enter
-        	tab 1
-        	enter
         	focus "Cisco Packet Tracer - $1/$2"
+		sleep 5
         	activate_activity_wizard
 
 		flaggg=`pwgen -A -B -0 16 -1`
 		passss=`pwgen -A -B -0 16 -1`
 		number=$(echo "$2" | cut -d" " -f1 | cut -d"_" -f3)
 
-		echo "INSERT INTO \`pka\` VALUES ($3,'${neptunkod[$4]}','$number','$2','$flaggg','$passss','0')" >> cra_dump_${datum}.sql
+		echo "INSERT INTO \`pka\` VALUES ($4,'${neptunkod[$3 - 1]}','$number','out_$3_$2','$flaggg','$passss','0')" >> cra_dump_${datum}.sql
 		echo "$4,$2,$flaggg,$passss" | tee -ai $dbfile
-		time create "$1" "$2" "$flaggg" "$passss" "$2"
-		#allnumber=$(($3*$pkanumber))
-		#currentnumber=$(($pkacounter*$3-$3+10#$gen))
-		#percent=$((100*$currentnumber/$allnumber))
-		#log "STATUS: [$percent%] [Version: $4/$3] [PKA: $pkacounter/$pkanumber] [All: $currentnumber/$allnumber]"
+		time create "$1" "$2" "$flaggg" "$passss" "$2" "$3"
 		sleep 20
 		cleanup
-#	done
-#	enter
 }
 
 #init
@@ -234,37 +235,24 @@ echo "neptun,outputfilename,flag,password" > $dbfile
 
 log "Cleaning output files"
 rm -rf $workdir/../final/out_*
+
 pkas=`ls $workdir -1 -v | grep pka`
-pkacounter=0
-realarraysize=$(expr ${#neptunkod[@]} - 1)
+#pkacounter=0
+realarraysize=$(echo ${#neptunkod[@]})
 log $pkas
-#touch ls.txt
-#for pka in $pkas
-#do
-#	for gen in `seq -w 0 $realarraysize`
-#        do
-#                cp -r $workdir/$pka $workdir/../out_${gen}_$pka
-#		echo "out_${gen}_$pka" >> ls.txt
-#        done
-#done
 
 out_pkas=`ls $workdir/.. -1 -v | grep out_`
-#out_pkas=$(cat ls.txt)
-
-#ls $workdir/.. | grep out_
-
-#exit 0
-
-#pkanumber=`ls $workdir -1 -v | grep pka |wc -l`
 setnumber=0
-for pka in $out_pkas
-do
-	pkacounter=$(($pkacounter+1))
-	time generate "$workdir/.." "$pka" $pkacounter $setnumber
-	if [ $setnumber -eq $realarraysize ]; then
-		setnumber=0;
-	elif [ $setnumber -lt $realarraysize ]; then
-		setnumber=$(expr $setnumber + 1);
-	fi
+for pka in $pkas; do
+	pkacounter=0
+	#pkanumber=$(echo "$pka" | cut -d" " -f1 | cut -d"_" -f3)
+	mkdir -p $workdir/../temp
+	while [[ $pkacounter -ne $realarraysize ]] ; do
+		pkacounter=$(($pkacounter+1))
+		setnumber=$(($setnumber+1))
+		cp $workdir/../origin/$pka $workdir/../temp
+		time generate "$workdir/../temp" "$pka" $pkacounter $setnumber
+		echo "Cisco Packet Tracer - $workdir/../temp/$pka"
+		mv $workdir/../temp/$pka $workdir/../final/out_${pkacounter}_$pka
+	done
 done
-#rm ls.txt
